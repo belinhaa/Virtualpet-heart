@@ -1,0 +1,234 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamagotchi</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0; /* Cor de fundo suave */
+        }
+
+        .tamagotchi {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #FFB6C1; /* Rosa bebê */
+            padding: 10px;
+            border-radius: 10px;
+            border: 3px solid #ff69b4; /* Contorno rosa mais escuro */
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1); /* Sombra suave */
+            width: 200px; /* Largura menor */
+        }
+
+        .screen {
+            width: 150px;
+            height: 150px; /* Garantir que a tela seja um quadrado */
+            background-color: white;
+            border: 3px solid black;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .screen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cobrir completamente a tela quadrada */
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .buttons button {
+            background-color: #ffffff;
+            border: 2px solid #ff69b4; /* Borda rosa mais escura */
+            border-radius: 5px;
+            padding: 5px;
+            cursor: pointer;
+            width: 40px; /* Largura dos ícones */
+            height: 40px; /* Altura dos ícones */
+            font-size: 24px; /* Tamanho dos emojis */
+            line-height: 1;
+            text-align: center;
+        }
+
+        #simple-game {
+            width: 150px;
+            height: 150px;
+            background-color: lightgray;
+            position: relative;
+            display: none;
+        }
+
+        #player, #enemy {
+            width: 15px;
+            height: 15px;
+            position: absolute;
+        }
+
+        #player {
+            background-color: black;
+            top: 67px;
+            left: 67px;
+        }
+
+        #enemy {
+            background-color: red;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="tamagotchi">
+        <div class="screen">
+            <img id="pet-image" src="desenho.png" alt="Tamagotchi Pet">
+        </div>
+        <div class="buttons">
+            <button id="banana" onclick="feed('banana')">🍌</button>
+            <button id="apple" onclick="feed('apple')">🍎</button>
+            <button id="carrot" onclick="feed('carrot')">🥕</button>
+            <button id="chocolate" onclick="feed('chocolate')">🍫</button>
+            <button id="play" onclick="play()">🎮</button>
+            <button id="sleep" onclick="sleep()">😴</button>
+            <button id="heal" onclick="heal()">💊</button>
+        </div>
+        <div id="simple-game">
+            <div id="player"></div>
+            <div id="enemy"></div>
+        </div>
+    </div>
+
+    <script>
+        let petState = 'normal'; // Pode ser 'normal', 'fome', 'sono', 'brincar', 'doente', 'triste'
+        let lastFeedTime = Date.now();
+
+        function feed(food) {
+            const now = Date.now();
+            const timeSinceLastFeed = now - lastFeedTime;
+
+            // Se o pet estava com fome ou doente, ele volta ao estado normal
+            if (petState === 'fome' || petState === 'doente') {
+                petState = 'normal';
+                document.getElementById('pet-image').src = 'desenho.png';
+            }
+
+            lastFeedTime = now; // Atualiza o tempo da última alimentação
+        }
+
+        function play() {
+            petState = 'brincar';
+            document.getElementById('pet-image').src = 'brincar.png';
+            showSimpleGame(); // Mostrar o jogo ao brincar
+        }
+
+        function sleep() {
+            petState = 'sono';
+            document.getElementById('pet-image').src = 'sono.png';
+        }
+
+        function heal() {
+            petState = 'normal';
+            document.getElementById('pet-image').src = 'desenho.png'; // Imagem normal
+        }
+
+        function showSimpleGame() {
+            document.getElementById('simple-game').style.display = 'block';
+            document.addEventListener('keydown', movePlayer);
+            moveEnemy();
+        }
+
+        function movePlayer(event) {
+            const player = document.getElementById('player');
+            let top = parseInt(window.getComputedStyle(player).getPropertyValue('top'));
+            let left = parseInt(window.getComputedStyle(player).getPropertyValue('left'));
+
+            if (event.key === 'ArrowUp') {
+                if (top > 0) player.style.top = top - 10 + 'px';
+            }
+            if (event.key === 'ArrowDown') {
+                if (top < 135) player.style.top = top + 10 + 'px';
+            }
+            if (event.key === 'ArrowLeft') {
+                if (left > 0) player.style.left = left - 10 + 'px';
+            }
+            if (event.key === 'ArrowRight') {
+                if (left < 135) player.style.left = left + 10 + 'px';
+            }
+
+            checkCollision();
+        }
+
+        function moveEnemy() {
+            const enemy = document.getElementById('enemy');
+            const player = document.getElementById('player');
+            const enemySpeed = 2;
+
+            const enemyInterval = setInterval(() => {
+                let enemyTop = parseInt(window.getComputedStyle(enemy).getPropertyValue('top'));
+                let enemyLeft = parseInt(window.getComputedStyle(enemy).getPropertyValue('left'));
+
+                let playerTop = parseInt(window.getComputedStyle(player).getPropertyValue('top'));
+                let playerLeft = parseInt(window.getComputedStyle(player).getPropertyValue('left'));
+
+                if (enemyTop < playerTop) enemy.style.top = enemyTop + enemySpeed + 'px';
+                if (enemyTop > playerTop) enemy.style.top = enemyTop - enemySpeed + 'px';
+                if (enemyLeft < playerLeft) enemy.style.left = enemyLeft + enemySpeed + 'px';
+                if (enemyLeft > playerLeft) enemy.style.left = enemyLeft - enemySpeed + 'px';
+
+                checkCollision();
+            }, 100);
+        }
+
+        function checkCollision() {
+            const player = document.getElementById('player');
+            const enemy = document.getElementById('enemy');
+
+            const playerRect = player.getBoundingClientRect();
+            const enemyRect = enemy.getBoundingClientRect();
+
+            if (
+                playerRect.x < enemyRect.x + enemyRect.width &&
+                playerRect.x + playerRect.width > enemyRect.x &&
+                playerRect.y < enemyRect.y + enemyRect.height &&
+                playerRect.y + playerRect.height > enemyRect.y
+            ) {
+                alert("Você perdeu!");
+                document.location.reload();
+            }
+        }
+
+        // Função para verificar o estado do pet periodicamente
+        function checkPetState() {
+            const now = Date.now();
+            const timeSinceLastFeed = now - lastFeedTime;
+
+            if (timeSinceLastFeed > 60000) { // Mais de 1 minuto sem comer
+                petState = 'fome';
+                document.getElementById('pet-image').src = 'fome.png';
+            }
+
+            if (timeSinceLastFeed > 120000) { // Mais de 2 minutos sem comer
+                petState = 'doente';
+                document.getElementById('pet-image').src = 'doença.png';
+            }
+        }
+
+        // Verifica o estado do pet a cada 10 segundos
+        setInterval(checkPetState, 10000);
+    </script>
+</body>
+</html>
